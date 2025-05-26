@@ -1,38 +1,37 @@
-<div class="startbar d-print-none">
-        <div class="brand">
-            <a href="index.php" class="logo">
-                <span>
-                    <img src="../assets/images/logo-sm.png" alt="logo-small" class="logo-sm">
-                </span>
-                <span class="">
-                    <img src="../assets/images/logo-light.png" alt="logo-large" class="logo-lg logo-light">
-                    <img src="../assets/images/logo-dark.png" alt="logo-large" class="logo-lg logo-dark">
-                </span>
-            </a>
-        </div>
-        <div class="startbar-menu" >
-            <div class="startbar-collapse" id="startbarCollapse" data-simplebar>
-                <div class="d-flex align-items-start flex-column w-100">
-                    <ul class="navbar-nav mb-auto w-100">
-                        <li class="menu-label pt-0 mt-0">
-                            <span>Main Menu</span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php">
-                                <i class="iconoir-home-simple menu-icon"></i>
-                                <span>대시보드</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="iconoir-user menu-icon"></i>
-                                <span>회원 관리</span>
-                            </a>
-                        </li>
+<?php
+// _header.php에서 $admin_base_url 변수가 이미 정의되어 있다고 가정합니다.
+?>
+        <div class="deznav">
+            <div class="deznav-scroll">
+                <ul class="metismenu" id="menu">
+                    <li><a href="<?php echo $admin_base_url; ?>/index.php" class="ai-icon" aria-expanded="false">
+                            <i class="flaticon-381-home"></i>
+                            <span class="nav-text">대시보드</span>
+                        </a>
+                    </li>
+                    <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
+                            <i class="flaticon-381-user"></i>
+                            <span class="nav-text">회원 관리</span>
+                        </a>
+                        <ul aria-expanded="false">
+                            <li><a href="<?php echo $admin_base_url; ?>/member_list.php">전체 회원 목록</a></li>
                         </ul>
+                    </li>
+                     <li><a class="has-arrow ai-icon" href="javascript:void()" aria-expanded="false">
+							<i class="flaticon-381-settings-2"></i>
+							<span class="nav-text">시스템 설정</span>
+						</a>
+                        <ul aria-expanded="false">
+                            <li><a href="#">기본 설정</a></li>
+                            <li><a href="#">관리자 계정 관리</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="copyright">
+                    <p><strong>베팅 솔루션 관리자</strong> © <?php echo date('Y'); ?> All Rights Reserved</p>
+                    <p>Powered by 사장님</p>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="startbar-overlay d-print-none"></div>
-    <div class="page-wrapper">
+        <div class="content-body">
+            <div class="container-fluid">
