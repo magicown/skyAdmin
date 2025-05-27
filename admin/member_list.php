@@ -160,7 +160,7 @@ include 'includes/_header.php';
                                         <?php while($row = $stmt->fetch()): ?>
                                             <tr>
                                                 <td><?php echo htmlspecialchars($row['parent_nickname'] ?? '없음'); ?></td>
-                                                <td><?php echo htmlspecialchars($row['userid']); ?><small>(<?php echo htmlspecialchars($row['nick']); ?>)</small></td>
+                                                <td><?php echo htmlspecialchars($row['userid']); ?>(<?php echo htmlspecialchars($row['nick']); ?>)</td>
                                                 <td class="text-end"><?php echo number_format($row['money']); ?></td>
                                                 <td class="text-end"><?php echo number_format($row['g_money']); ?></td>
                                                 <td class="text-end"><?php echo number_format($row['point']); ?></td>

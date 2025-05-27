@@ -1,0 +1,15 @@
+/* Custom styles for betting solution admin */
+
+/* Import Pretendard font */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+/* Apply Pretendard font to all elements */
+body, h1, h2, h3, h4, h5, h6, p, span, div, table, th, td, input, select, textarea, button {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif !important;
+}
+
+/* Table text styling */
+.table tbody td {
+    color: #000 !important;
+    font-weight: 700 !important;
+}
