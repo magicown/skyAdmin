@@ -1,3 +1,31 @@
+<?php
+ini_set('display_errors', 1);
+
+
+// utils.php 파일은 $_SERVER['DOCUMENT_ROOT']를 기준으로 lib 폴더를 찾습니다.
+require_once $_SERVER['DOCUMENT_ROOT'] . '/lib/functions/utils.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/lib/config/database.php';
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// URL 경로 함수 호출
+$admin_base_url = get_base_url('admin');     // "/admin" 을 반환해야 합니다.
+$admin_assets_url = get_assets_url('admin'); // "/admin/assets" 를 반환해야 합니다.
+
+// 로그인 페이지가 아닌 경우에만 로그인 여부 체크
+if (!is_login_page('admin')) { // 현재 페이지가 login.php 가 아닐 때만 실행
+    if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+        header("Location: " . $admin_base_url . "/login.php");
+        exit();
+    }
+    // 로그인 된 페이지이면서, DB 연결이 필요한 경우 (예: _header.php 에서 DB 정보 사용하는 경우)
+    // 또는 각 페이지에서 개별적으로 require_once get_db_config_path(); 호출
+    // 여기서는 우선 주석 처리. 실제 DB 사용은 index.php 등에서 개별적으로 하는 것을 권장합니다.
+    // require_once get_db_config_path(); 
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -37,14 +65,14 @@
 	<!-- FAVICONS ICON -->
 	<link rel="shortcut icon" type="image/png" href="images/favicon.png">
 
-	<link href="assets/vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
-	<link href="assets/vendor/swiper/css/swiper-bundle.min.css" rel="stylesheet">
-	<link href="assets/vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
-	<link href="assets/vendor/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
-	<link href="assets/vendor/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+	<link href="<?php echo $admin_assets_url; ?>/vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
+	<link href="<?php echo $admin_assets_url; ?>/vendor/swiper/css/swiper-bundle.min.css" rel="stylesheet">
+	<link href="<?php echo $admin_assets_url; ?>/vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
+	<link href="<?php echo $admin_assets_url; ?>/vendor/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
+	<link href="<?php echo $admin_assets_url; ?>/vendor/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 
 	<!-- Style css -->
-	<link class="main-css" href="assets/css/style.css" rel="stylesheet">
+	<link class="main-css" href="<?php echo $admin_assets_url; ?>/css/style.css" rel="stylesheet">
 
 </head>
 
@@ -55,7 +83,7 @@
     ********************-->
 	<div id="preloader">
 		<div>
-			<img src="images/pre.gif" alt="">
+			<img src="<?php echo $admin_assets_url; ?>/images/pre.gif" alt="">
 		</div>
 	</div>
 	<!--*******************
@@ -148,7 +176,7 @@
 									<li class="active dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/1.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/1.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon"></span>
 											</div>
 											<div class="user_info">
@@ -160,7 +188,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/2.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/2.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon offline"></span>
 											</div>
 											<div class="user_info">
@@ -172,7 +200,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/3.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/3.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon"></span>
 											</div>
 											<div class="user_info">
@@ -184,7 +212,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/4.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/4.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon offline"></span>
 											</div>
 											<div class="user_info">
@@ -197,7 +225,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/5.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/5.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon offline"></span>
 											</div>
 											<div class="user_info">
@@ -209,7 +237,7 @@
 									<li class="dz- -user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/1.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/1.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon"></span>
 											</div>
 											<div class="user_info">
@@ -221,7 +249,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/2.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/2.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon offline"></span>
 											</div>
 											<div class="user_info">
@@ -234,7 +262,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/3.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/3.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon"></span>
 											</div>
 											<div class="user_info">
@@ -246,7 +274,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/4.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/4.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon offline"></span>
 											</div>
 											<div class="user_info">
@@ -259,7 +287,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/5.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/5.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon offline"></span>
 											</div>
 											<div class="user_info">
@@ -271,7 +299,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/1.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/1.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon"></span>
 											</div>
 											<div class="user_info">
@@ -283,7 +311,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/2.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/2.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon offline"></span>
 											</div>
 											<div class="user_info">
@@ -295,7 +323,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/3.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/3.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon"></span>
 											</div>
 											<div class="user_info">
@@ -308,7 +336,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/4.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/4.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon offline"></span>
 											</div>
 											<div class="user_info">
@@ -320,7 +348,7 @@
 									<li class="dz-chat-user">
 										<div class="d-flex bd-highlight">
 											<div class="img_cont">
-												<img src="images/avatar/5.jpg" class="rounded-circle user_img" alt="">
+												<img src="<?php echo $admin_assets_url; ?>/images/avatar/5.jpg" class="rounded-circle user_img" alt="">
 												<span class="online_icon offline"></span>
 											</div>
 											<div class="user_info">
@@ -379,7 +407,7 @@
 							<div class="card-body msg_card_body dz-scroll" id="DZ_W_Contacts_Body3">
 								<div class="d-flex justify-content-start mb-4">
 									<div class="img_cont_msg">
-										<img src="images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 									<div class="msg_cotainer">
 										Hi, how are you samim?
@@ -392,12 +420,12 @@
 										<span class="msg_time_send">8:55 AM, Today</span>
 									</div>
 									<div class="img_cont_msg">
-										<img src="images/avatar/2.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/2.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 								</div>
 								<div class="d-flex justify-content-start mb-4">
 									<div class="img_cont_msg">
-										<img src="images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 									<div class="msg_cotainer">
 										I am good too, thank you for your chat template
@@ -410,12 +438,12 @@
 										<span class="msg_time_send">9:05 AM, Today</span>
 									</div>
 									<div class="img_cont_msg">
-										<img src="images/avatar/2.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/2.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 								</div>
 								<div class="d-flex justify-content-start mb-4">
 									<div class="img_cont_msg">
-										<img src="images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 									<div class="msg_cotainer">
 										I am looking for your next templates
@@ -428,12 +456,12 @@
 										<span class="msg_time_send">9:10 AM, Today</span>
 									</div>
 									<div class="img_cont_msg">
-										<img src="images/avatar/2.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/2.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 								</div>
 								<div class="d-flex justify-content-start mb-4">
 									<div class="img_cont_msg">
-										<img src="images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 									<div class="msg_cotainer">
 										Bye, see you
@@ -442,7 +470,7 @@
 								</div>
 								<div class="d-flex justify-content-start mb-4">
 									<div class="img_cont_msg">
-										<img src="images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 									<div class="msg_cotainer">
 										Hi, how are you samim?
@@ -455,12 +483,12 @@
 										<span class="msg_time_send">8:55 AM, Today</span>
 									</div>
 									<div class="img_cont_msg">
-										<img src="images/avatar/2.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/2.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 								</div>
 								<div class="d-flex justify-content-start mb-4">
 									<div class="img_cont_msg">
-										<img src="images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 									<div class="msg_cotainer">
 										I am good too, thank you for your chat template
@@ -473,12 +501,12 @@
 										<span class="msg_time_send">9:05 AM, Today</span>
 									</div>
 									<div class="img_cont_msg">
-										<img src="images/avatar/2.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/2.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 								</div>
 								<div class="d-flex justify-content-start mb-4">
 									<div class="img_cont_msg">
-										<img src="images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 									<div class="msg_cotainer">
 										I am looking for your next templates
@@ -491,12 +519,12 @@
 										<span class="msg_time_send">9:10 AM, Today</span>
 									</div>
 									<div class="img_cont_msg">
-										<img src="images/avatar/2.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/2.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 								</div>
 								<div class="d-flex justify-content-start mb-4">
 									<div class="img_cont_msg">
-										<img src="images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
+										<img src="<?php echo $admin_assets_url; ?>/images/avatar/1.jpg" class="rounded-circle user_img_msg" alt="">
 									</div>
 									<div class="msg_cotainer">
 										Bye, see you
@@ -1020,7 +1048,7 @@
 											data-bs-toggle="dropdown" aria-expanded="false">
 											<div class="header-info2 d-flex align-items-center">
 												<div class="header-media">
-													<img src="images/user.jpg" alt="">
+													<img src="<?php echo $admin_assets_url; ?>/images/user.jpg" alt="">
 												</div>
 											</div>
 										</a>
@@ -1028,7 +1056,7 @@
 											<div class="card border-0 mb-0">
 												<div class="card-header py-2">
 													<div class="products">
-														<img src="images/user.jpg" class="avatar avatar-md" alt="">
+														<img src="<?php echo $admin_assets_url; ?>/images/user.jpg" class="avatar avatar-md" alt="">
 														<div>
 															<h6>Hanuman Prajapati</h6>
 															<span>Web Designer</span>

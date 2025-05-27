@@ -1,5 +1,17 @@
 <?php
-include_once "includes/_header.php";
+    $page_title = "메인 대시보드"; // 이 페이지의 타이틀 설정
+    require_once 'includes/_header.php';    
+    
+
+    try {
+        $query = "SELECT id, username, IFNULL(nickname, '-') as nickname, balance, member_type, status, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') as created_at_formatted FROM members ORDER BY id DESC";
+        echo $query.'<p>';
+        $stmt = $pdo->query($query);
+        $members = $stmt->fetchAll();
+    } catch (PDOException $e) {
+        $members = []; 
+        $db_error_message = "회원 정보를 가져오는 중 오류가 발생했습니다. 관리자에게 문의하십시오.";
+    }    
 ?>
 
 		<!--**********************************
@@ -22,9 +34,9 @@ include_once "includes/_header.php";
 															<h4 class="text-white">$310.435</h4>
 														</div>
 														<div class="avatar-list avatar-list-stacked me-2">
-															<img src="images/contacts/pic555.jpg"
+															<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 																class="avatar rounded-circle" alt="">
-															<img src="images/contacts/pic666.jpg"
+															<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 																class="avatar rounded-circle" alt="">
 															<span class="avatar rounded-circle">25+</span>
 														</div>
@@ -194,11 +206,11 @@ include_once "includes/_header.php";
 												</div>
 												<div class="d-flex pt-3">
 													<div class="avatar-list avatar-list-stacked">
-														<img src="images/contacts/pic555.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 															class="avatar rounded-circle" alt="">
-														<img src="images/contacts/pic666.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 															class="avatar rounded-circle" alt="">
-														<img src="images/contacts/pic777.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic777.jpg"
 															class="avatar rounded-circle" alt="">
 													</div>
 													<div class="ratting-data">
@@ -1029,7 +1041,7 @@ include_once "includes/_header.php";
 												<td>Batman</td>
 												<td>
 													<div class="d-flex align-items-center">
-														<img src="images/contacts/pic1.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 														<p class="mb-0 ms-2">Liam Risher</p>
 													</div>
@@ -1046,11 +1058,11 @@ include_once "includes/_header.php";
 												</td>
 												<td class="pe-0">
 													<div class="avatar-list avatar-list-stacked">
-														<img src="images/contacts/pic1.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic555.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic666.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 													</div>
 												</td>
@@ -1065,7 +1077,7 @@ include_once "includes/_header.php";
 												<td>Bender Project</td>
 												<td>
 													<div class="d-flex align-items-center">
-														<img src="images/contacts/pic2.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic2.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 														<p class="mb-0 ms-2">Oliver Noah</p>
 													</div>
@@ -1082,11 +1094,11 @@ include_once "includes/_header.php";
 												</td>
 												<td class="pe-0">
 													<div class="avatar-list avatar-list-stacked">
-														<img src="images/contacts/pic1.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic555.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic666.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 													</div>
 												</td>
@@ -1101,7 +1113,7 @@ include_once "includes/_header.php";
 												<td>Canary</td>
 												<td>
 													<div class="d-flex align-items-center">
-														<img src="images/contacts/pic888.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic888.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 														<p class="mb-0 ms-2">Elijah James</p>
 													</div>
@@ -1118,13 +1130,13 @@ include_once "includes/_header.php";
 												</td>
 												<td class="pe-0">
 													<div class="avatar-list avatar-list-stacked">
-														<img src="images/contacts/pic666.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 															class="avatar avatar-md  rounded-circle" alt="">
-														<img src="images/contacts/pic555.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic1.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic666.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 															class="avatar avatar-md  rounded-circle" alt="">
 													</div>
 												</td>
@@ -1139,7 +1151,7 @@ include_once "includes/_header.php";
 												<td>Casanova</td>
 												<td>
 													<div class="d-flex align-items-center">
-														<img src="images/contacts/pic1.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 														<p class="mb-0 ms-2">William Risher</p>
 													</div>
@@ -1156,11 +1168,11 @@ include_once "includes/_header.php";
 												</td>
 												<td class="pe-0">
 													<div class="avatar-list avatar-list-stacked">
-														<img src="images/contacts/pic1.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic555.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic666.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 													</div>
 												</td>
@@ -1175,7 +1187,7 @@ include_once "includes/_header.php";
 												<td>Bigfish</td>
 												<td>
 													<div class="d-flex align-items-center">
-														<img src="images/contacts/pic777.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic777.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 														<p class="mb-0 ms-2">Donald Benjamin</p>
 													</div>
@@ -1192,11 +1204,11 @@ include_once "includes/_header.php";
 												</td>
 												<td class="pe-0">
 													<div class="avatar-list avatar-list-stacked">
-														<img src="images/contacts/pic1.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic777.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic777.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic666.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 													</div>
 												</td>
@@ -1211,7 +1223,7 @@ include_once "includes/_header.php";
 												<td>Matadors</td>
 												<td>
 													<div class="d-flex align-items-center">
-														<img src="images/contacts/pic888.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic888.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 														<p class="mb-0 ms-2">Liam Risher</p>
 													</div>
@@ -1228,11 +1240,11 @@ include_once "includes/_header.php";
 												</td>
 												<td class="pe-0">
 													<div class="avatar-list avatar-list-stacked">
-														<img src="images/contacts/pic777.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic777.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic555.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic666.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 													</div>
 												</td>
@@ -1247,7 +1259,7 @@ include_once "includes/_header.php";
 												<td>Mercury</td>
 												<td>
 													<div class="d-flex align-items-center">
-														<img src="images/contacts/pic2.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic2.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 														<p class="mb-0 ms-2">Oliver Noah</p>
 													</div>
@@ -1264,11 +1276,11 @@ include_once "includes/_header.php";
 												</td>
 												<td class="pe-0">
 													<div class="avatar-list avatar-list-stacked">
-														<img src="images/contacts/pic1.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic777.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic777.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic666.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 													</div>
 												</td>
@@ -1283,7 +1295,7 @@ include_once "includes/_header.php";
 												<td>Whistler</td>
 												<td>
 													<div class="d-flex align-items-center">
-														<img src="images/contacts/pic999.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic999.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 														<p class="mb-0 ms-2">Elijah James</p>
 													</div>
@@ -1300,13 +1312,13 @@ include_once "includes/_header.php";
 												</td>
 												<td class="pe-0">
 													<div class="avatar-list avatar-list-stacked">
-														<img src="images/contacts/pic666.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic555.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic1.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic666.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 													</div>
 												</td>
@@ -1321,7 +1333,7 @@ include_once "includes/_header.php";
 												<td>Time Projects</td>
 												<td>
 													<div class="d-flex align-items-center">
-														<img src="images/contacts/pic2.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic2.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 														<p class="mb-0 ms-2">Lucas</p>
 													</div>
@@ -1338,11 +1350,11 @@ include_once "includes/_header.php";
 												</td>
 												<td class="pe-0">
 													<div class="avatar-list avatar-list-stacked">
-														<img src="images/contacts/pic1.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic555.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic999.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic999.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 													</div>
 												</td>
@@ -1357,7 +1369,7 @@ include_once "includes/_header.php";
 												<td>Fast Ball</td>
 												<td>
 													<div class="d-flex align-items-center">
-														<img src="images/contacts/pic1.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 														<p class="mb-0 ms-2">William Risher</p>
 													</div>
@@ -1374,11 +1386,11 @@ include_once "includes/_header.php";
 												</td>
 												<td class="pe-0">
 													<div class="avatar-list avatar-list-stacked">
-														<img src="images/contacts/pic1.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 															class="avatar avatar-md  rounded-circle" alt="">
-														<img src="images/contacts/pic555.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
-														<img src="images/contacts/pic999.jpg"
+														<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic999.jpg"
 															class="avatar avatar-md rounded-circle" alt="">
 													</div>
 												</td>
@@ -1410,19 +1422,19 @@ include_once "includes/_header.php";
 											<div class="card">
 												<div class="card-body">
 													<div class="card-media">
-														<img src="images/p1.gif" alt="">
+														<img src="<?php echo $admin_assets_url; ?>/images/p1.gif" alt="">
 													</div>
 													<div class="media-data">
 														<h4><a href="project.html">Development planning</a></h4>
 														<div class="d-flex align-items-center">
 															<div class="avatar-list avatar-list-stacked">
-																<img src="images/contacts/pic666.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 																	class="avatar avatar-md  rounded-circle" alt="">
-																<img src="images/contacts/pic555.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 																	class="avatar avatar-md rounded-circle" alt="">
-																<img src="images/contacts/pic1.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 																	class="avatar avatar-md rounded-circle" alt="">
-																<img src="images/contacts/pic666.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 																	class="avatar avatar-md  rounded-circle" alt="">
 															</div>
 															<span>21+ Team</span>
@@ -1444,19 +1456,19 @@ include_once "includes/_header.php";
 											<div class="card">
 												<div class="card-body">
 													<div class="card-media">
-														<img src="images/p3.gif" alt="">
+														<img src="<?php echo $admin_assets_url; ?>/images/p3.gif" alt="">
 													</div>
 													<div class="media-data">
 														<h4><a href="project.html">Desinging planning</a></h4>
 														<div class="d-flex align-items-center">
 															<div class="avatar-list avatar-list-stacked">
-																<img src="images/contacts/pic666.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 																	class="avatar avatar-md  rounded-circle" alt="">
-																<img src="images/contacts/pic555.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 																	class="avatar avatar-md rounded-circle" alt="">
-																<img src="images/contacts/pic1.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 																	class="avatar avatar-md rounded-circle" alt="">
-																<img src="images/contacts/pic666.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 																	class="avatar avatar-md  rounded-circle" alt="">
 															</div>
 															<span>21+ Team</span>
@@ -1478,19 +1490,19 @@ include_once "includes/_header.php";
 											<div class="card">
 												<div class="card-body">
 													<div class="card-media">
-														<img src="images/p.gif" alt="">
+														<img src="<?php echo $admin_assets_url; ?>/images/p.gif" alt="">
 													</div>
 													<div class="media-data">
 														<h4><a href="project.html">Frontend Designing</a></h4>
 														<div class="d-flex align-items-center">
 															<div class="avatar-list avatar-list-stacked">
-																<img src="images/contacts/pic666.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 																	class="avatar avatar-md  rounded-circle" alt="">
-																<img src="images/contacts/pic555.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 																	class="avatar avatar-md rounded-circle" alt="">
-																<img src="images/contacts/pic1.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 																	class="avatar avatar-md rounded-circle" alt="">
-																<img src="images/contacts/pic666.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 																	class="avatar avatar-md  rounded-circle" alt="">
 															</div>
 															<span>21+ Team</span>
@@ -1512,19 +1524,19 @@ include_once "includes/_header.php";
 											<div class="card">
 												<div class="card-body">
 													<div class="card-media">
-														<img src="images/p2.gif" alt="">
+														<img src="<?php echo $admin_assets_url; ?>/images/p2.gif" alt="">
 													</div>
 													<div class="media-data">
 														<h4>Compete this projects Monday</h4>
 														<div class="d-flex align-items-center">
 															<div class="avatar-list avatar-list-stacked">
-																<img src="images/contacts/pic666.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 																	class="avatar avatar-md  rounded-circle" alt="">
-																<img src="images/contacts/pic555.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic555.jpg"
 																	class="avatar avatar-md rounded-circle" alt="">
-																<img src="images/contacts/pic1.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic1.jpg"
 																	class="avatar avatar-md rounded-circle" alt="">
-																<img src="images/contacts/pic666.jpg"
+																<img src="<?php echo $admin_assets_url; ?>/images/contacts/pic666.jpg"
 																	class="avatar avatar-md  rounded-circle" alt="">
 															</div>
 															<span>21+ Team</span>
