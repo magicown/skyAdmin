@@ -8,15 +8,26 @@ require_once '../lib/config/core.php';
 //     exit();
 // }
 
-// --- 검색 및 필터링 처리 ---
+// --- 검색 및 필터링 파라미터 ---
 $params = [];
 $where_clauses = [];
 $join_clause = '';
-
-// 기본 SQL FROM 절
 $from_clause = "FROM members m";
 
-// 상위 파트너 ID로 검색
+// 날짜 검색
+$start_date = $_GET['start_date'] ?? '';
+$end_date = $_GET['end_date'] ?? '';
+if ($start_date && $end_date) {
+    if (preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $start_date) &&
+        preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $end_date)) {
+        // 검색 기준을 '가입일'(regdate)로 할지, 다른 날짜 컬럼으로 할지 결정 필요. 여기서는 가입일로 가정.
+        $where_clauses[] = "DATE(m.regdate) BETWEEN :start_date AND :end_date";
+        $params[':start_date'] = $start_date;
+        $params[':end_date'] = $end_date;
+    }
+}
+
+// 상위 파트너 ID로 검색 (기존 상세 검색 영역에 있던 기능)
 if (!empty($_GET['search_ancestor_id'])) {
     $ancestor_id = (int)$_GET['search_ancestor_id'];
     if ($ancestor_id > 0) {
@@ -26,23 +37,53 @@ if (!empty($_GET['search_ancestor_id'])) {
     }
 }
 
-// 아이디/닉네임으로 검색
-if (!empty($_GET['search_keyword'])) {
-    $where_clauses[] = "(m.userid LIKE :keyword OR m.nick LIKE :keyword)";
-    $params[':keyword'] = '%' . $_GET['search_keyword'] . '%';
-}
-
-// 상태로 검색
+// 상태로 검색 (기존 상세 검색 영역에 있던 기능)
 if (!empty($_GET['search_status'])) {
     $where_clauses[] = "m.status = :status";
     $params[':status'] = $_GET['search_status'];
+}
+
+// 새로운 통합 검색 (이미지의 우측 검색 영역)
+$search_field = $_GET['search_field'] ?? 'all'; // 이미지의 '전체' 드롭다운
+$search_query = $_GET['search_query'] ?? '';   // 이미지의 검색어 입력 필드
+
+if (!empty($search_query)) {
+    $search_query_like = '%' . $search_query . '%';
+    switch ($search_field) {
+        case 'userid':
+            $where_clauses[] = "m.userid LIKE :search_query";
+            $params[':search_query'] = $search_query_like;
+            break;
+        case 'nick':
+            $where_clauses[] = "m.nick LIKE :search_query";
+            $params[':search_query'] = $search_query_like;
+            break;
+        case 'name': // '이름' 검색 추가
+            $where_clauses[] = "m.name LIKE :search_query";
+            $params[':search_query'] = $search_query_like;
+            break;
+        case 'hphone': // '연락처' 검색 추가
+            $where_clauses[] = "m.hphone LIKE :search_query";
+            $params[':search_query'] = $search_query_like;
+            break;
+        case 'join_ip': // '가입IP' 검색 추가
+            $where_clauses[] = "m.join_ip = :search_query_ip"; // IP는 정확히 일치 또는 LIKE
+            $params[':search_query_ip'] = $search_query;
+            break;
+        case 'all':
+        default:
+            $where_clauses[] = "(m.userid LIKE :sq_all OR m.nick LIKE :sq_all OR m.name LIKE :sq_all OR m.hphone LIKE :sq_all OR m.join_ip = :sq_all_ip)";
+            $params[':sq_all'] = $search_query_like;
+            $params[':sq_all_ip'] = $search_query;
+            break;
+    }
 }
 
 $where_sql = count($where_clauses) > 0 ? "WHERE " . implode(' AND ', $where_clauses) : '';
 
 // --- 페이지네이션 처리 ---
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 20;
+$limit = isset($_GET['limit']) && in_array((int)$_GET['limit'], [20, 50, 100, 200, 500]) ? (int)$_GET['limit'] : 20;
 $offset = ($page - 1) * $limit;
 
 // 전체 레코드 수 계산
@@ -52,7 +93,7 @@ $total_stmt->execute($params);
 $total_records = $total_stmt->fetchColumn();
 $total_pages = ceil($total_records / $limit);
 
-// --- 회원 데이터 조회 (거래 관련 집계 쿼리 없음) ---
+// --- 회원 데이터 조회 ---
 $sql = "
     SELECT
         m.idx, m.userid, m.nick, m.money, m.g_money, m.point, m.level, m.is_partner, m.status,
@@ -67,18 +108,30 @@ $sql = "
 ";
 
 $stmt = $pdo->prepare($sql);
+$stmt_params_paged = array_merge($params, [':limit' => $limit, ':offset' => $offset]);
 
-$stmt_params = array_merge($params, [':limit' => $limit, ':offset' => $offset]);
-foreach ($stmt_params as $key => &$val) {
-    $param_type = (in_array($key, [':limit', ':offset', ':ancestor_id'])) ? PDO::PARAM_INT : PDO::PARAM_STR;
+foreach ($stmt_params_paged as $key => &$val) {
+    // :limit, :offset, :ancestor_id는 PDO::PARAM_INT로, 나머지는 PDO::PARAM_STR로 바인딩
+    $param_type = (in_array($key, [':limit', ':offset']) || ($key === ':ancestor_id' && is_int($val))) ? PDO::PARAM_INT : PDO::PARAM_STR;
     $stmt->bindValue($key, $val, $param_type);
 }
 $stmt->execute();
 
 // 헤더 파일 포함
 include 'includes/_header.php';
-
 ?>
+
+<style>
+    .member-list-table td {font-size: 0.875rem; color: #37474F; vertical-align: middle;}
+    .member-list-table th {vertical-align: middle;}
+    .th-checkbox, .td-checkbox {width: 50px;text-align: center;}
+    /* 상세 검색 영역 스타일 */
+    .detail-search-toolbar { padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+    .detail-search-toolbar .form-label { margin-bottom: .2rem; font-size: .8rem; white-space: nowrap; }
+    .detail-search-toolbar .form-control, .detail-search-toolbar .form-select { font-size: .875rem; padding: .375rem .75rem; }
+    .detail-search-toolbar .btn { font-size: .875rem; }
+    .detail-search-toolbar .input-group-text { font-size: .875rem; }
+</style>
 
 <div class="content-body">
     <div class="container-fluid">
@@ -92,30 +145,67 @@ include 'includes/_header.php';
         <div class="row">
             <div class="col-xl-12">
                 <div class="card">
-                    <div class="card-header"><h4 class="card-title">회원 검색</h4></div>
-                    <div class="card-body">
-                        <form method="get" action="member_list.php" class="row">
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label">아이디 / 닉네임</label>
-                                <input type="text" class="form-control" name="search_keyword" placeholder="아이디 또는 닉네임" value="<?php echo htmlspecialchars($_GET['search_keyword'] ?? ''); ?>">
+                    <div class="card-header">
+                        <h4 class="card-title">회원 정보 검색 및 관리</h4>
+                    </div>
+                    <div class="card-body detail-search-toolbar">
+                        <form method="GET" action="member_list.php" id="filterForm">
+                            <div class="row gx-2 align-items-end mb-2">
+                                <div class="col-md-4 col-lg-3">
+                                    <label for="startDate" class="form-label">가입일</label>
+                                    <div class="input-group">
+                                        <input type="date" class="form-control" id="startDate" name="start_date" value="<?php echo htmlspecialchars($start_date); ?>" style="min-width: 120px;">
+                                        <span class="input-group-text">~</span>
+                                        <input type="date" class="form-control" id="endDate" name="end_date" value="<?php echo htmlspecialchars($end_date); ?>" style="min-width: 120px;">
+                                    </div>
+                                </div>
+                                <div class="col-md-auto ms-md-auto">
+                                     <label class="form-label d-block d-md-none">&nbsp;</label> <div class="btn-group mt-2 mt-md-0" role="group">
+                                        <button type="button" class="btn btn-outline-dark status-filter-btn" data-status="all">전체</button>
+                                        <button type="button" class="btn btn-outline-dark status-filter-btn" data-status="W">요청회원</button>
+                                        <button type="button" class="btn btn-outline-dark status-filter-btn" data-status="Y">정상회원</button>
+                                        <button type="button" class="btn btn-outline-dark status-filter-btn" data-status="N">차단회원</button>
+                                        <button type="button" class="btn btn-outline-dark status-filter-btn" data-status="D">삭제회원</button>
+                                        <button type="button" class="btn btn-outline-dark status-filter-btn" data-status="B">대기회원</button>
+                                    </div>
+                                </div>
+                                
                             </div>
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label">상위 파트너 ID (idx)</label>
-                                <input type="number" class="form-control" name="search_ancestor_id" placeholder="상위 파트너의 숫자 ID" value="<?php echo htmlspecialchars($_GET['search_ancestor_id'] ?? ''); ?>">
-                            </div>
-                            <div class="col-md-2 mb-3">
-                                <label class="form-label">회원 상태</label>
-                                <select name="search_status" class="form-control">
-                                    <option value="">-- 전체 --</option>
-                                    <option value="Y" <?php echo ($_GET['search_status'] ?? '') == 'Y' ? 'selected' : ''; ?>>정상</option>
-                                    <option value="N" <?php echo ($_GET['search_status'] ?? '') == 'N' ? 'selected' : ''; ?>>정지</option>
-                                    <option value="W" <?php echo ($_GET['search_status'] ?? '') == 'W' ? 'selected' : ''; ?>>승인대기</option>
-                                    <option value="B" <?php echo ($_GET['search_status'] ?? '') == 'B' ? 'selected' : ''; ?>>블랙</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3 mb-3 align-self-end">
-                                <button type="submit" class="btn btn-primary">검색</button>
-                                <a href="member_list.php" class="btn btn-secondary">초기화</a>
+                            <div class="row gx-2 align-items-end mt-md-2">
+                                <div class="col-md-2 col-lg-1 mt-2 mt-md-0">
+                                    <label for="itemsPerPage" class="form-label">표시 항목 수</label>
+                                    <select class="form-select" id="itemsPerPage" name="limit" onchange="this.form.submit()">
+                                        <option value="20" <?php if ($limit == 20) echo 'selected'; ?>>20개</option>
+                                        <option value="50" <?php if ($limit == 50) echo 'selected'; ?>>50개</option>
+                                        <option value="100" <?php if ($limit == 100) echo 'selected'; ?>>100개</option>
+                                        <option value="200" <?php if ($limit == 200) echo 'selected'; ?>>200개</option>
+                                        <option value="500" <?php if ($limit == 500) echo 'selected'; ?>>500개</option>
+                                    </select>
+                                </div> 
+
+                                <div class="col-md-4 col-lg-3 ms-md-auto">
+                                    <label for="searchField" class="form-label">통합검색</label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="searchField" name="search_field" style="max-width: 100px;">
+                                            <option value="all" <?php if ($search_field == 'all') echo 'selected'; ?>>전체</option>
+                                            <option value="userid" <?php if ($search_field == 'userid') echo 'selected'; ?>>아이디</option>
+                                            <option value="nick" <?php if ($search_field == 'nick') echo 'selected'; ?>>닉네임</option>
+                                            <option value="name" <?php if ($search_field == 'name') echo 'selected'; ?>>이름</option>
+                                            <option value="hphone" <?php if ($search_field == 'hphone') echo 'selected'; ?>>연락처</option>
+                                            <option value="join_ip" <?php if ($search_field == 'join_ip') echo 'selected'; ?>>가입IP</option>
+                                        </select>
+                                        <input type="text" class="form-control" placeholder="검색어" name="search_query" value="<?php echo htmlspecialchars($search_query); ?>">
+                                    </div>
+                                </div>
+                                <div class="col-md-auto mt-2 mt-md-0">
+                                     <label class="form-label d-block d-md-none">&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary">검색</button>                                    
+                                    <button type="button" class="btn btn-success" id="addNewMemberBtn" data-bs-toggle="modal" data-bs-target="#addDownlineModal">회원추가</button>
+                                    <button type="button" class="btn btn-warning" id="bulkBlockBtn">선택차단</button>
+                                    <button type="button" class="btn btn-danger" id="bulkDeleteBtn">선택삭제</button>
+                                </div>
+                                
+                                
                             </div>
                         </form>
                     </div>
@@ -123,19 +213,26 @@ include 'includes/_header.php';
             </div>
         </div>
 
+
         <div class="row">
             <div class="col-xl-12">
                 <div class="card">
-                    <div class="card-header"><h4 class="card-title">전체 회원 (총 <?php echo number_format($total_records); ?>명)</h4></div>
+                    <div class="card-header">
+                        <h4 class="card-title">회원 목록 (총 <?php echo number_format($total_records); ?>명)</h4>
+                    </div>
                     <div class="card-body">
+                        <form id="memberListForm" action="member_bulk_action.php" method="POST">
+                        <input type="hidden" name="bulk_action_type" id="bulkActionType">
                         <div class="table-responsive">
-                            <table class="table table-bordered table-striped table-hover text-center" style="min-width: 2800px;">
+                            <table class="table table-bordered table-striped table-hover text-center member-list-table">
                                 <thead>
                                     <tr>
+                                        <th class="th-checkbox"><input type="checkbox" id="selectAllCheckbox"></th>
                                         <th>추천인</th>
                                         <th>아이디(닉네임)</th>
-                                        <th>보유머니</th>
-                                        <th>게임머니</th>
+                                        <th>지급/회수</th>
+                                        <th>게임회수</th>
+                                        <th>보유머니</th>                                        
                                         <th>포인트</th>
                                         <th>총 입금</th>
                                         <th>총 출금</th>
@@ -152,38 +249,43 @@ include 'includes/_header.php';
                                         <th>하부추가</th>
                                         <th>레벨</th>
                                         <th>회원유형</th>
-                                        <th>상태</th>
+                                        <th style="text-align:center !important">상태</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php if ($stmt->rowCount() > 0): ?>
                                         <?php while($row = $stmt->fetch()): ?>
                                             <tr>
-                                                <td><?php echo htmlspecialchars($row['parent_nickname'] ?? '없음'); ?></td>
-                                                <td><?php echo htmlspecialchars($row['userid']); ?>(<?php echo htmlspecialchars($row['nick']); ?>)</td>
-                                                <td class="text-end"><?php echo number_format($row['money']); ?></td>
-                                                <td class="text-end"><?php echo number_format($row['g_money']); ?></td>
+                                                <td class="td-checkbox"><input type="checkbox" name="member_idx[]" class="rowCheckbox" value="<?php echo $row['idx']; ?>"></td>
+                                                <td><button class="btn btn-sm btn-secondary w-100"><?php echo htmlspecialchars($row['parent_nickname'] ?? '없음'); ?></button></td>
+                                                <td><button class="btn btn-sm btn-primary w-100"><?php echo htmlspecialchars($row['userid']); ?>(<?php echo htmlspecialchars($row['nick']); ?>)</button></td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-success">지급</button>
+                                                    <button type="button" class="btn btn-sm btn-danger">회수</button>
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-danger">회수</button>
+                                                </td>
+                                                <td class="text-end"><?php echo number_format($row['money']); ?></td>                                                
                                                 <td class="text-end"><?php echo number_format($row['point']); ?></td>
-                                                
                                                 <td class="text-end text-success">0</td>
                                                 <td class="text-end text-danger">0</td>
                                                 <td class="text-end text-primary">0</td>
                                                 <td class="text-end">0</td>
                                                 <td class="text-end">0</td>
                                                 <td class="text-end text-primary">0</td>
-                                                
                                                 <td><?php echo $row['login_date'] ? date('y-m-d H:i', strtotime($row['login_date'])) : '기록 없음'; ?></td>
                                                 <td><?php echo date('y-m-d H:i', strtotime($row['regdate'])); ?></td>
                                                 <td><?php echo htmlspecialchars($row['join_ip'] ?? ''); ?></td>
                                                 <td><?php echo htmlspecialchars($row['login_ip'] ?? '기록 없음'); ?></td>
                                                 <td>
-                                                    <div class="d-flex justify-content-center">
-                                                        <a href="member_status_update.php?idx=<?php echo $row['idx']; ?>&status=N" class="btn btn-danger btn-sm me-1">차단</a>
-                                                        <a href="member_delete.php?idx=<?php echo $row['idx']; ?>" class="btn btn-dark btn-sm" onclick="return confirm('정말 삭제하시겠습니까?');">삭제</a>
-                                                    </div>
+                                                    <button class="btn btn-sm btn-warning">차단</button>
+                                                    <button class="btn btn-sm btn-danger">삭제</button>                                                        
                                                 </td>
-                                                <td>
-                                                    <a href="member_switch.php?idx=<?php echo $row['idx']; ?>" class="btn btn-sm btn-secondary">스위칭</a>
+                                                <td>                                                    
+                                                    <div class="form-check form-switch d-flex justify-content-center">
+                                                        <input class="form-check-input switch" data-id="hajutest" type="checkbox">
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <button type="button" class="btn btn-sm btn-success add-downline-btn" 
@@ -194,11 +296,11 @@ include 'includes/_header.php';
                                                         추가
                                                     </button>
                                                 </td>
-                                                <td><span class="badge badge-light"><?php echo htmlspecialchars($row['level']); ?></span></td>
+                                                <td><span class="badge badge-dark"><?php echo htmlspecialchars($row['level']); ?></span></td>
                                                 <td>
                                                     <?php echo $row['is_partner'] == 'Y' ? "<span class='badge badge-info'>파트너</span>" : "<span class='badge badge-secondary'>일반</span>"; ?>
                                                 </td>
-                                                <td>
+                                                <td style="text-align:center !important">
                                                     <?php
                                                         $status_map = ['Y' => ['class' => 'badge-success', 'text' => '정상'], 'N' => ['class' => 'badge-danger', 'text' => '정지'], 'W' => ['class' => 'badge-warning', 'text' => '대기'], 'B' => ['class' => 'badge-dark', 'text' => '블랙']];
                                                         $status_info = $status_map[$row['status']] ?? ['class' => 'badge-secondary', 'text' => '알수없음'];
@@ -208,15 +310,36 @@ include 'includes/_header.php';
                                             </tr>
                                         <?php endwhile; ?>
                                     <?php else: ?>
-                                        <tr><td colspan="21">검색된 회원이 없습니다.</td></tr>
+                                        <tr><td colspan="22">검색된 회원이 없습니다.</td></tr>
                                     <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
+                        </form>
 
                         <nav>
                             <ul class="pagination justify-content-center">
-                                </ul>
+                                <?php
+                                    $current_query_params = $_GET;
+                                    $current_query_params['page'] = $page > 1 ? $page - 1 : 1;
+                                    $prev_page_link = '?' . http_build_query($current_query_params);
+
+                                    $current_query_params['page'] = $page < $total_pages ? $page + 1 : $total_pages;
+                                    $next_page_link = '?' . http_build_query($current_query_params);
+                                ?>
+                                <?php if ($page > 1): ?>
+                                    <li class="page-item"><a class="page-link" href="<?php echo $prev_page_link; ?>">이전</a></li>
+                                <?php endif; ?>
+                                <?php for ($i = 1; $i <= $total_pages; $i++): 
+                                    $current_query_params['page'] = $i;
+                                    $page_link = '?' . http_build_query($current_query_params);
+                                ?>
+                                    <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>"><a class="page-link" href="<?php echo $page_link; ?>"><?php echo $i; ?></a></li>
+                                <?php endfor; ?>
+                                <?php if ($page < $total_pages): ?>
+                                    <li class="page-item"><a class="page-link" href="<?php echo $next_page_link; ?>">다음</a></li>
+                                <?php endif; ?>
+                            </ul>
                         </nav>
                     </div>
                 </div>
@@ -225,6 +348,7 @@ include 'includes/_header.php';
     </div>
 </div>
 
+<!-- 하부회원 추가 -->
 <div class="modal fade" id="addDownlineModal" tabindex="-1" aria-labelledby="addDownlineModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered"> <div class="modal-content">
         <div class="modal-header">
@@ -358,108 +482,192 @@ include 'includes/_footer.php';
 ?>
 
 <script>
-$(document).ready(function() {
-    if ($('#addDownlineModal').length) {
-        var $addDownlineModal = $('#addDownlineModal');
-        var $addDownlineForm = $('#addDownlineForm');
-        var $passwdInput = $('#addDownlinePasswd');
-        var $passwdConfirmInput = $('#addDownlinePasswdConfirm');
-        var $passwordConfirmError = $('#passwordConfirmError');
-        var $partnerRadio = $('#isPartnerY');
-        var $normalRadio = $('#isPartnerN');
-        var $partnerFeeSection = $('#partnerFeeSection');
+document.addEventListener('DOMContentLoaded', function () {
+    // 전체선택 체크박스 로직
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
 
-        $addDownlineModal.on('show.bs.modal', function(event) {
-            var button = $(event.relatedTarget);
-            var parentIdx = button[0].getAttribute('data-bs-idx');
-            var parentUserid = button[0].getAttribute('data-bs-userid');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            rowCheckboxes.forEach(function(checkbox) {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        });
+    }
+    if(rowCheckboxes) {
+        rowCheckboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                if (!this.checked) {
+                    if(selectAllCheckbox) selectAllCheckbox.checked = false;
+                } else {
+                    let allChecked = true;
+                    rowCheckboxes.forEach(function(cb) {
+                        if (!cb.checked) {
+                            allChecked = false;
+                        }
+                    });
+                    if(selectAllCheckbox) selectAllCheckbox.checked = allChecked;
+                }
+            });
+        });
+    }
 
-            var $modalTitle = $addDownlineModal.find('.modal-title');
-            var $parentUseridDisplayInput = $('#addDownlineParentUseridDisplay');
-            var $parentIdxInput = $('#addDownlineParentIdx');
+    // 회원 상태 필터 버튼 로직
+    const statusFilterButtons = document.querySelectorAll('.status-filter-btn');
+    const filterForm = document.getElementById('filterForm');
+    
+    if(statusFilterButtons && filterForm) {
+        // 현재 선택된 상태에 따라 버튼 활성화
+        const currentStatus = new URLSearchParams(window.location.search).get('search_status') || 'all';
+        statusFilterButtons.forEach(function(button) {
+            if(button.dataset.status === currentStatus) {
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('btn-secondary');
+            }
+        });
+        
+        // 버튼 클릭 이벤트
+        statusFilterButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                const status = this.dataset.status;
+                
+                // 히든 필드 생성 또는 업데이트
+                let statusInput = filterForm.querySelector('input[name="search_status"]');
+                if(!statusInput) {
+                    statusInput = document.createElement('input');
+                    statusInput.type = 'hidden';
+                    statusInput.name = 'search_status';
+                    filterForm.appendChild(statusInput);
+                }
+                
+                // all인 경우 필드 제거, 아니면 값 설정
+                if(status === 'all') {
+                    if(statusInput) {
+                        filterForm.removeChild(statusInput);
+                    }
+                } else {
+                    statusInput.value = status;
+                }
+                
+                // 폼 제출
+                filterForm.submit();
+            });
+        });
+    }
+    
+    // 날짜 입력 필드
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
 
-            $modalTitle.text('하부 회원 추가 (상위: ' + parentUserid + ')');
-            console.log(parentUserid);
-            $('#addDownlineParentUseridDisplay').val(parentUserid);
-            $parentUseridDisplayInput.val(parentUserid);
-            $parentIdxInput.val(parentIdx);
+    // 하부회원 추가 모달 로직 (이전과 동일, 상단 회원추가 버튼에 대한 처리 추가)
+    var addDownlineModal = document.getElementById('addDownlineModal');
+    var addDownlineForm = document.getElementById('addDownlineForm'); 
+    
+    if (addDownlineModal && addDownlineForm) {
+        var passwdInputModal = addDownlineForm.querySelector('#addDownlinePasswd');
+        var passwdConfirmInputModal = addDownlineForm.querySelector('#addDownlinePasswdConfirm');
+        var passwordConfirmErrorModal = addDownlineForm.querySelector('#passwordConfirmError');
+        var partnerRadioModal = addDownlineForm.querySelector('#addDownlineIsPartnerY'); 
+        var normalRadioModal = addDownlineForm.querySelector('#addDownlineIsPartnerN');
+        var partnerFeeSectionModal = addDownlineForm.querySelector('#partnerFeeSectionModal');
 
-            // 현재 부모 아이디와 인덱스 값 저장
-            var currentParentUserid = $parentUseridDisplayInput.val();
-            var currentParentIdx = $parentIdxInput.val();
+        addDownlineModal.addEventListener('show.bs.modal', function (event) {
+            addDownlineForm.reset(); 
             
-            // 폼 초기화
-            $addDownlineForm[0].reset();
+            if(passwdConfirmInputModal) passwdConfirmInputModal.classList.remove('is-invalid');
+            if(passwordConfirmErrorModal) passwordConfirmErrorModal.style.display = 'none';
             
-            // 부모 아이디와 인덱스 값 다시 설정
-            $parentUseridDisplayInput.val(currentParentUserid);
-            $parentIdxInput.val(currentParentIdx);
-            
-            $partnerFeeSection.hide();
-            $passwdConfirmInput.removeClass('is-invalid');
-            $passwordConfirmError.hide();
-            $normalRadio.prop('checked', true); // 기본값 일반회원
+            if(partnerFeeSectionModal) partnerFeeSectionModal.style.display = 'none';
+            if(normalRadioModal) normalRadioModal.checked = true; 
+
+            var button = event.relatedTarget; // 모달을 연 버튼
+            var parentIdx = ""; 
+            var parentUserid = "없음 (신규 최상위)"; 
+
+            // 어떤 버튼에서 모달이 열렸는지 확인
+            if (button && button.classList.contains('add-downline-btn')) { // 테이블 내 '하부추가' 버튼
+                 parentIdx = button.getAttribute('data-bs-idx');
+                 parentUserid = button.getAttribute('data-bs-userid');
+            } else if (button && button.id === 'addNewMemberBtn') { // 상단 '회원추가' 버튼
+                 // parentIdx 와 parentUserid는 기본값(최상위)을 사용
+            }
+
+            var modalTitle = addDownlineModal.querySelector('.modal-title');
+            var parentUseridDisplayInput = addDownlineForm.querySelector('#addDownlineParentUseridDisplay');
+            var parentIdxInput = addDownlineForm.querySelector('#addDownlineParentIdx');
+
+            if (modalTitle) modalTitle.textContent = '회원 추가 (상위: ' + parentUserid + ')';
+            if (parentUseridDisplayInput) parentUseridDisplayInput.value = parentUserid + (parentIdx ? ' (ID: ' + parentIdx + ')' : '');
+            if (parentIdxInput) parentIdxInput.value = parentIdx; 
         });
 
-        // 비밀번호 유효성 검사 (영문+숫자+특수문자 5자 이상)
-        function validatePasswordStrength(password) {
-            // 최소 5자 이상
-            if (password.length < 5) {
-                return false;
+        function validatePasswordModal() {
+            if (passwdInputModal && passwdConfirmInputModal) { 
+                if (passwdInputModal.value !== passwdConfirmInputModal.value) {
+                    passwdConfirmInputModal.classList.add('is-invalid');
+                    if(passwordConfirmErrorModal) passwordConfirmErrorModal.style.display = 'block';
+                    return false;
+                } else {
+                    passwdConfirmInputModal.classList.remove('is-invalid');
+                    if(passwordConfirmErrorModal) passwordConfirmErrorModal.style.display = 'none';
+                    return true;
+                }
             }
-            
-            // 영문, 숫자, 특수문자 각각 1개 이상 포함
-            var hasLetter = /[a-zA-Z]/.test(password);
-            var hasNumber = /[0-9]/.test(password);
-            var hasSpecial = /[!@#$%^&*(),.?\":{}<>]/.test(password);
-            
-            return hasLetter && hasNumber && hasSpecial;
+            return true; 
         }
-
-        // 비밀번호 확인 로직
-        function validatePassword() {
-            // 비밀번호 강도 검사
-            if (!validatePasswordStrength($passwdInput.val())) {
-                $passwdInput.addClass('is-invalid');
-                $('<div class="invalid-feedback">비밀번호는 영문, 숫자, 특수문자를 포함하여 5자 이상이어야 합니다.</div>').insertAfter($passwdInput).show();
-                return false;
-            } else {
-                $passwdInput.removeClass('is-invalid');
-                $passwdInput.next('.invalid-feedback').remove();
-            }
-            
-            // 비밀번호 일치 여부 검사
-            if ($passwdInput.val() !== $passwdConfirmInput.val()) {
-                $passwdConfirmInput.addClass('is-invalid');
-                $passwordConfirmError.show();
-                return false;
-            } else {
-                $passwdConfirmInput.removeClass('is-invalid');
-                $passwordConfirmError.hide();
-                return true;
-            }
-        }
+        if(passwdInputModal) passwdInputModal.addEventListener('input', validatePasswordModal);
+        if(passwdConfirmInputModal) passwdConfirmInputModal.addEventListener('input', validatePasswordModal);
         
-        $passwdInput.on('input', validatePassword);
-        $passwdConfirmInput.on('input', validatePassword);
-
-        // 회원 유형 선택에 따른 파트너 요율 필드 표시/숨김
-        function togglePartnerFeeSection() {
-            if ($partnerRadio.prop('checked')) {
-                $partnerFeeSection.show();
-            } else {
-                $partnerFeeSection.hide();
+        function togglePartnerFeeSectionModal() {
+            if (partnerRadioModal && partnerFeeSectionModal) {
+                 if (partnerRadioModal.checked) {
+                    partnerFeeSectionModal.style.display = 'block';
+                } else {
+                    partnerFeeSectionModal.style.display = 'none';
+                }
             }
         }
-        
-        $partnerRadio.on('change', togglePartnerFeeSection);
-        $normalRadio.on('change', togglePartnerFeeSection);
+        if(partnerRadioModal) partnerRadioModal.addEventListener('change', togglePartnerFeeSectionModal);
+        if(normalRadioModal) normalRadioModal.addEventListener('change', togglePartnerFeeSectionModal);
 
-        // 폼 제출 시 비밀번호 일치 여부 최종 확인
-        $addDownlineForm.on('submit', function(event) {
-            if (!validatePassword()) {
-                event.preventDefault(); // 비밀번호 불일치 시 제출 막음
-                alert('비밀번호가 유효하지 않습니다. 다시 확인해주세요.');
+        addDownlineForm.addEventListener('submit', function(event) {
+            if (!validatePasswordModal()) {
+                event.preventDefault(); 
+                alert('비밀번호가 일치하지 않습니다. 다시 확인해주세요.');
+            }
+        });
+    }
+
+    // 일괄 작업 버튼 로직
+    const bulkBlockBtn = document.getElementById('bulkBlockBtn');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const memberListForm = document.getElementById('memberListForm'); // 테이블을 감싸는 form
+    const bulkActionTypeInput = document.getElementById('bulkActionType'); // 액션 종류를 담을 hidden input
+
+    if (bulkBlockBtn && memberListForm && bulkActionTypeInput) {
+        bulkBlockBtn.addEventListener('click', function() {
+            const selectedMembers = memberListForm.querySelectorAll('.rowCheckbox:checked');
+            if (selectedMembers.length === 0) {
+                alert('차단할 회원을 선택해주세요.');
+                return;
+            }
+            if (confirm(selectedMembers.length + '명의 회원을 정말로 차단하시겠습니까?')) {
+                bulkActionTypeInput.value = 'block';
+                memberListForm.submit();
+            }
+        });
+    }
+
+    if (bulkDeleteBtn && memberListForm && bulkActionTypeInput) {
+        bulkDeleteBtn.addEventListener('click', function() {
+            const selectedMembers = memberListForm.querySelectorAll('.rowCheckbox:checked');
+            if (selectedMembers.length === 0) {
+                alert('삭제할 회원을 선택해주세요.');
+                return;
+            }
+            if (confirm(selectedMembers.length + '명의 회원을 정말로 삭제하시겠습니까? (삭제된 데이터는 복구할 수 없습니다)')) {
+                 bulkActionTypeInput.value = 'delete';
+                 memberListForm.submit();
             }
         });
     }
