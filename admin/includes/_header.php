@@ -66,9 +66,9 @@ if (!is_login_page('admin')) { // 현재 페이지가 login.php 가 아닐 때�
 	<link rel="shortcut icon" type="image/png" href="images/favicon.png">
 
 	<link href="<?php echo $admin_assets_url; ?>/vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
-	<link href="<?php echo $admin_assets_url; ?>/vendor/swiper/css/swiper-bundle.min.css" rel="stylesheet">
+	<!-- <link href="<?php echo $admin_assets_url; ?>/vendor/swiper/css/swiper-bundle.min.css" rel="stylesheet">
 	<link href="<?php echo $admin_assets_url; ?>/vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
-	<link href="<?php echo $admin_assets_url; ?>/vendor/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
+	<link href="<?php echo $admin_assets_url; ?>/vendor/datatables/css/buttons.dataTables.min.css" rel="stylesheet"> -->
 	<link href="<?php echo $admin_assets_url; ?>/vendor/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
 
 	<!-- Style css -->
